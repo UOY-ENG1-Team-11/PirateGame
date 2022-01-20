@@ -2,6 +2,7 @@ package team11.pirategame.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.Files;
 import team11.pirategame.PirateGame;
 
 public class DesktopLauncher {
@@ -11,6 +12,7 @@ public class DesktopLauncher {
 		//if these values are changed, change in main class too
 		config.width = 1920;
 		config.height = 1080;
+		config.addIcon("icon.png", Files.FileType.Internal);
 		new LwjglApplication(new PirateGame(), config);
 	}
 }

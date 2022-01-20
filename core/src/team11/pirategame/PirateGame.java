@@ -23,20 +23,20 @@ public class PirateGame extends ApplicationAdapter {
 	private int screenWidth = 1920;
 	private int screenHeight = 1080;
 	
-	private Polygon player;
-	private double playerX;
-	private double playerY;
-	private double playerRotation;
-	private int playerWidth = 64;
-	private int playerHeight = 128;
-	//these values are in pixels/second
-	private double playerSpeed = 0;
-	private double playerAccel = 100;
-	private double playerNaturalDecel = 50;
-	private double playerBrakeDecel = 250;
-	private double playerSpeedCap = 250;
-	private double playerMinusSpeedCap = -50;
-	private double playerRotSpeed = 120;
+	private int tileWidth = 32, tileHeight = 32;
+	
+	private Tile[][] map;
+	private int mapWidth = 60;
+	private int mapHeight = 34;
+	
+	private Ship player;
+	//these values are in pixels/second and are to be used as default values when making a ship.
+	private float shipAccel = 100;
+	private float shipNaturalDecel = 50;
+	private float shipBrakeDecel = 250;
+	private float shipSpeedCap = 250;
+	private float shipMinusSpeedCap = -50;
+	private float shipRotSpeed = 120;
 	
 	@Override
 	public void create () {
@@ -44,63 +44,80 @@ public class PirateGame extends ApplicationAdapter {
 		camera = new OrthographicCamera();
 		font = new BitmapFont();
 		shapeRenderer = new ShapeRenderer();
+		shapeRenderer.setAutoShapeType(true);
 		camera.setToOrtho(false, screenWidth, screenHeight);
-		player = new Polygon(new float[]{0,0,playerWidth,0,playerWidth,playerHeight,0,playerHeight});
-		player.setOrigin(64/2, 128/2);
-		player.setPosition(screenWidth/2 - playerWidth/2, screenHeight/2 - playerHeight/2);
-		playerX = screenWidth/2 - playerWidth/2;
-		playerY = screenHeight/2 - playerHeight/2;
-		playerRotation = 0;
+		player = new Ship(screenWidth/2 - 64/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed);
+		initMap();
 	}
 
 	@Override
 	public void render () {
-		ScreenUtils.clear(0, 0.4f, 0.6f, 1);
+		ScreenUtils.clear(1f, 1f, 1f, 1);
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		shapeRenderer.setProjectionMatrix(camera.combined);
-		shapeRenderer.begin(ShapeType.Line);
+		shapeRenderer.begin(ShapeType.Filled);
+		drawMap();
         shapeRenderer.setColor(Color.BROWN);
-        shapeRenderer.polygon(player.getTransformedVertices());
+        shapeRenderer.polygon(player.getPoly().getTransformedVertices());
         shapeRenderer.end();
 		batch.begin();
-		font.draw(batch, "SPEED: " + playerSpeed, 20, 20);
+		font.draw(batch, "SPEED: " + player.getSpeed(), 20, 20);
 		// IMAGE PROCESSING HERE
 		batch.end();
 		playerMovement();
 		cameraMovement();
 	}
 	
+	private void initMap() {
+		map = new Tile[mapWidth][mapHeight];
+		for(int x = 0; x < mapWidth; x++) {
+			for(int y = 0; y < mapHeight; y++) {
+				TileType t = TileType.Ocean;
+				if(x == 0 || y == 0 || x == mapWidth - 1 || y == mapHeight -1) t = TileType.Land;
+				map[x][y] = new Tile(x, y, t);
+			}
+		}
+	}
+	
+	private void drawMap() {
+		for(int x = 0; x < mapWidth; x++) {
+			for(int y = 0; y < mapHeight; y++) {
+				shapeRenderer.setColor(map[x][y].getType().getColor());
+				shapeRenderer.rect(x*tileWidth, y*tileHeight, tileWidth, tileHeight);
+			}
+		}
+	}
+	
 	private void playerMovement() {
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
-			if(playerSpeed < playerSpeedCap) {
-				playerSpeed += playerAccel * Gdx.graphics.getDeltaTime();
-				if(playerSpeed > playerSpeedCap) {
-					playerSpeed = playerSpeedCap;
+			if(player.getSpeed() < player.getSpeedCap()) {
+				player.setSpeed(player.getSpeed() + player.getAccel() * Gdx.graphics.getDeltaTime());
+				if(player.getSpeed() > player.getSpeedCap()) {
+					player.setSpeed(player.getSpeedCap());
 				}
 			}
 		} else if(Gdx.input.isKeyPressed(Input.Keys.S)) {
-			playerSpeed -= playerBrakeDecel * Gdx.graphics.getDeltaTime();
-			if(playerSpeed < playerMinusSpeedCap) {
-				playerSpeed = playerMinusSpeedCap;
+			player.setSpeed(player.getSpeed() - player.getBrakeDecel() * Gdx.graphics.getDeltaTime());
+			if(player.getSpeed() < player.getReverseSpeedCap()) {
+				player.setSpeed(player.getReverseSpeedCap());
 			}
-		} else if(playerSpeed > 0){
-				playerSpeed -= playerNaturalDecel * Gdx.graphics.getDeltaTime();
-				if(playerSpeed < 0) {
-					playerSpeed = 0;
+		} else if(player.getSpeed() > 0){
+				player.setSpeed(player.getSpeed() - player.getDecel() * Gdx.graphics.getDeltaTime());
+				if(player.getSpeed() < 0) {
+					player.setSpeed(0);
 				}
-		} else if(playerSpeed < 0) {
-			playerSpeed += playerNaturalDecel * Gdx.graphics.getDeltaTime();
-			if(playerSpeed > 0) {
-				playerSpeed = 0;
+		} else if(player.getSpeed() < 0) {
+			player.setSpeed(player.getSpeed() + player.getDecel() * Gdx.graphics.getDeltaTime());
+			if(player.getSpeed() > 0) {
+				player.setSpeed(0);
 			}
 		}
-		if(playerSpeed != 0) {
-			playerX += playerSpeed * Math.sin(Math.toRadians(-player.getRotation())) * Gdx.graphics.getDeltaTime();
-			playerY += playerSpeed * Math.cos(Math.toRadians(-player.getRotation())) * Gdx.graphics.getDeltaTime();
-			player.setPosition(Math.round(playerX), Math.round(playerY));
-			if(Gdx.input.isKeyPressed(Input.Keys.A)) player.rotate((float)(playerRotSpeed * Math.abs(playerSpeed/playerSpeedCap) * Gdx.graphics.getDeltaTime()));
-			if(Gdx.input.isKeyPressed(Input.Keys.D)) player.rotate((float)(-playerRotSpeed * Math.abs(playerSpeed/playerSpeedCap) * Gdx.graphics.getDeltaTime()));
+		if(player.getSpeed() != 0) {
+			player.setX(player.getX() + player.getSpeed() * Math.sin(Math.toRadians(-player.getRotation())) * Gdx.graphics.getDeltaTime());
+			player.setY(player.getY() + player.getSpeed() * Math.cos(Math.toRadians(-player.getRotation())) * Gdx.graphics.getDeltaTime());
+			if(Gdx.input.isKeyPressed(Input.Keys.A)) player.rotate((float)(player.getTurnSpeed() * Math.abs(player.getSpeed()/player.getSpeedCap()) * Gdx.graphics.getDeltaTime()));
+			if(Gdx.input.isKeyPressed(Input.Keys.D)) player.rotate((float)(-player.getTurnSpeed() * Math.abs(player.getSpeed()/player.getSpeedCap()) * Gdx.graphics.getDeltaTime()));
 		}
 	}
 	
