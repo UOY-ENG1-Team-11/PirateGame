@@ -1,7 +1,5 @@
 package team11.pirategame;
 
-import com.badlogic.gdx.math.Rectangle;
-
 public class Tile {
 	private TileType type;
 	private int x, y;

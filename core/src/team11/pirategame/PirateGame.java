@@ -122,7 +122,8 @@ public class PirateGame extends ApplicationAdapter {
 	}
 	
 	private void cameraMovement() {
-		
+		camera.position.set((float) player.getX(), (float) player.getY(), 0);
+		camera.update();
 	}
 	
 	@Override
