@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.ScreenUtils;
 
@@ -60,13 +61,14 @@ public class PirateGame extends ApplicationAdapter {
 		drawMap();
         shapeRenderer.setColor(Color.BROWN);
         shapeRenderer.polygon(player.getPoly().getTransformedVertices());
+        playerMovement();
+		cameraMovement();
         shapeRenderer.end();
 		batch.begin();
 		font.draw(batch, "SPEED: " + player.getSpeed(), 20, 20);
 		// IMAGE PROCESSING HERE
 		batch.end();
-		playerMovement();
-		cameraMovement();
+		
 	}
 	
 	private void initMap() {
@@ -85,6 +87,7 @@ public class PirateGame extends ApplicationAdapter {
 			for(int y = 0; y < mapHeight; y++) {
 				shapeRenderer.setColor(map[x][y].getType().getColor());
 				shapeRenderer.rect(x*tileWidth, y*tileHeight, tileWidth, tileHeight);
+				
 			}
 		}
 	}
@@ -114,10 +117,34 @@ public class PirateGame extends ApplicationAdapter {
 			}
 		}
 		if(player.getSpeed() != 0) {
+			double oldX = player.getX(), oldY = player.getY();
+			float oldRot = player.getRotation();
 			player.setX(player.getX() + player.getSpeed() * Math.sin(Math.toRadians(-player.getRotation())) * Gdx.graphics.getDeltaTime());
 			player.setY(player.getY() + player.getSpeed() * Math.cos(Math.toRadians(-player.getRotation())) * Gdx.graphics.getDeltaTime());
 			if(Gdx.input.isKeyPressed(Input.Keys.A)) player.rotate((float)(player.getTurnSpeed() * Math.abs(player.getSpeed()/player.getSpeedCap()) * Gdx.graphics.getDeltaTime()));
 			if(Gdx.input.isKeyPressed(Input.Keys.D)) player.rotate((float)(-player.getTurnSpeed() * Math.abs(player.getSpeed()/player.getSpeedCap()) * Gdx.graphics.getDeltaTime()));
+			float[] vertices = player.getPoly().getTransformedVertices();
+			int minX = mapWidth + 1, minY = mapHeight + 1, maxX = -1, maxY = -1;
+			for(int i = 0; i < 7; i +=2) {
+				int x = (int) Math.floor(vertices[i]/32);
+				int y = (int) Math.floor(vertices[i+1]/32);
+				if(x < minX) minX = x;
+				if(x > maxX) maxX = x;
+				if(y < minY) minY = y;
+				if(y > maxY) maxY = y;
+			}
+			for(int x = minX; x <= maxX; x++) {
+				for(int y = minY; y <= maxY; y++) {
+					Tile t = map[x][y];
+					if(t.getType().hasCollision() && Intersector.overlapConvexPolygons(player.getPoly(), t.getHitbox())) {
+						System.out.println("AA");
+						player.setX(oldX);
+						player.setY(oldY);
+						player.getPoly().setRotation(oldRot);
+						player.setSpeed(0);
+					}
+				}
+			}
 		}
 	}
 	
