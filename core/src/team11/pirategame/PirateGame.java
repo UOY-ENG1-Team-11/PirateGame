@@ -3,15 +3,14 @@ package team11.pirategame;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class PirateGame extends ApplicationAdapter {
@@ -27,8 +26,7 @@ public class PirateGame extends ApplicationAdapter {
 	private int tileWidth = 32, tileHeight = 32;
 	
 	private Tile[][] map;
-	private int mapWidth = 60;
-	private int mapHeight = 34;
+	private int mapWidth = 60, mapHeight = 34; //Default values overwritten when loading map file.
 	
 	private Ship player;
 	//these values are in pixels/second and are to be used as default values when making a ship.
@@ -72,14 +70,31 @@ public class PirateGame extends ApplicationAdapter {
 	}
 	
 	private void initMap() {
+		FileHandle file = Gdx.files.local("map.txt");
+		String[] in = file.readString().split("\\r?\\n");
+		String[] mapSize = in[0].split(",");
+		mapWidth = Integer.parseInt(mapSize[0]);
+		mapHeight = Integer.parseInt(mapSize[1]);
 		map = new Tile[mapWidth][mapHeight];
-		for(int x = 0; x < mapWidth; x++) {
+		for (int y=0;y<mapHeight;y++) {
+			 String[] line = in[mapHeight-y].split(" ");
+			 for(int x=0;x<mapWidth;x++) {
+				 TileType t = TileType.Ocean;
+				 if(line[x].equals("L")) {
+					 t = TileType.Land;
+				 } 
+				 map[x][y] = new Tile(x, y, t);
+			 }
+		}
+		/*CREATES EMPTY MAP WITH LAND BORDER:
+		 * 
+		 * for(int x = 0; x < mapWidth; x++) {
 			for(int y = 0; y < mapHeight; y++) {
 				TileType t = TileType.Ocean;
 				if(x == 0 || y == 0 || x == mapWidth - 1 || y == mapHeight -1) t = TileType.Land;
 				map[x][y] = new Tile(x, y, t);
 			}
-		}
+		}*/
 	}
 	
 	private void drawMap() {
