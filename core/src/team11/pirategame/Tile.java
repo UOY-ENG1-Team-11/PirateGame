@@ -1,11 +1,13 @@
 package team11.pirategame;
 
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Polygon;
 
 public class Tile {
 	private TileType type;
 	private int x, y;
 	private Polygon hitbox;
+	private Sprite sprite;
 	
 	public Tile(int x, int y, TileType type) {
 		this.x = x;
@@ -14,6 +16,8 @@ public class Tile {
 		hitbox = new Polygon(new float[]{0,0,32,0,32,32,0,32});
 		hitbox.setOrigin(0, 0);
 		hitbox.setPosition((float) x*32, (float) y*32);
+		sprite = new Sprite(type.getTexture());
+		sprite.setPosition(x*32, y*32);
 	}
 	
 	public TileType getType() {
@@ -32,5 +36,9 @@ public class Tile {
 	
 	public Polygon getHitbox() {
 		return hitbox;
+	}
+	
+	public Sprite getSprite() {
+		return sprite;
 	}
 }

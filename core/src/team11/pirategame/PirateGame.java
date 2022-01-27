@@ -1,11 +1,14 @@
 package team11.pirategame;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -37,6 +40,12 @@ public class PirateGame extends ApplicationAdapter {
 	private float shipMinusSpeedCap = -50;
 	private float shipRotSpeed = 120;
 	
+	private Long cannonBallTimeout = 10000l; //time in milliseconds for cannonballs to dissapear
+	
+	private Texture playerTex;
+	
+	private ArrayList<Cannonball> cannonballs = new ArrayList<Cannonball>();
+	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -45,28 +54,37 @@ public class PirateGame extends ApplicationAdapter {
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
 		camera.setToOrtho(false, screenWidth, screenHeight);
-		player = new Ship(screenWidth/2 - 64/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed);
+		playerTex = new Texture(Gdx.files.internal("playership1.png"));
+		player = new Ship(playerTex, screenWidth/2 - 64/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed, 500, 0.5);
 		initMap();
 	}
 
 	@Override
 	public void render () {
-		ScreenUtils.clear(1f, 1f, 1f, 1);
+		ScreenUtils.clear(0.0157f, 0.6118f, 0.0157f, 1);
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		shapeRenderer.setProjectionMatrix(camera.combined);
-		shapeRenderer.begin(ShapeType.Filled);
-		drawMap();
-        shapeRenderer.setColor(Color.BROWN);
-        shapeRenderer.polygon(player.getPoly().getTransformedVertices());
-        playerMovement();
-		cameraMovement();
-        shapeRenderer.end();
 		batch.begin();
 		font.draw(batch, "SPEED: " + player.getSpeed(), 20, 20);
-		// IMAGE PROCESSING HERE
-		batch.end();
-		
+		drawMap();
+		player.getSprite().draw(batch);
+        batch.end();
+		shapeRenderer.begin(ShapeType.Filled);
+		drawCannonballs();
+		shapeRenderer.setColor(Color.BROWN);
+        shapeRenderer.polygon(player.getPoly().getTransformedVertices());
+		shapeRenderer.end();
+        playerMovement();
+        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+        	Cannonball[] balls = player.fire();
+        	if(balls != null) {
+	        	for(Cannonball c : balls) {
+	        		cannonballs.add(c);
+	        	}
+        	}
+        }
+		cameraMovement();
 	}
 	
 	private void initMap() {
@@ -75,14 +93,11 @@ public class PirateGame extends ApplicationAdapter {
 		String[] mapSize = in[0].split(",");
 		mapWidth = Integer.parseInt(mapSize[0]);
 		mapHeight = Integer.parseInt(mapSize[1]);
-		map = new Tile[mapWidth][mapHeight];
+		map = new Tile[mapWidth][mapHeight]; 
 		for (int y=0;y<mapHeight;y++) {
 			 String[] line = in[mapHeight-y].split(" ");
 			 for(int x=0;x<mapWidth;x++) {
-				 TileType t = TileType.Ocean;
-				 if(line[x].equals("L")) {
-					 t = TileType.Land;
-				 } 
+				 TileType t = TileType.getTileType(line[x]);
 				 map[x][y] = new Tile(x, y, t);
 			 }
 		}
@@ -100,11 +115,26 @@ public class PirateGame extends ApplicationAdapter {
 	private void drawMap() {
 		for(int x = 0; x < mapWidth; x++) {
 			for(int y = 0; y < mapHeight; y++) {
-				shapeRenderer.setColor(map[x][y].getType().getColor());
-				shapeRenderer.rect(x*tileWidth, y*tileHeight, tileWidth, tileHeight);
+				map[x][y].getSprite().draw(batch);
 				
 			}
 		}
+	}
+	
+	private void drawCannonballs() {
+        shapeRenderer.setColor(Color.GRAY);
+        ArrayList<Cannonball> toRemove = new ArrayList<Cannonball>();
+        for(Cannonball c : cannonballs) {
+        	c.setX(c.getX() + c.getSpeed() * Math.sin(Math.toRadians(-c.getDirection())) * Gdx.graphics.getDeltaTime());
+			c.setY(c.getY() + c.getSpeed() * Math.cos(Math.toRadians(-c.getDirection())) * Gdx.graphics.getDeltaTime());
+        	shapeRenderer.circle((float) c.getX(), (float) c.getY(), 10);      	
+        	if(System.currentTimeMillis() > c.getCreationTime() + cannonBallTimeout) {
+        		toRemove.add(c);
+        	}
+        }
+        for(Cannonball c : toRemove) {
+        	cannonballs.remove(c);
+        }
 	}
 	
 	private void playerMovement() {
@@ -152,7 +182,6 @@ public class PirateGame extends ApplicationAdapter {
 				for(int y = minY; y <= maxY; y++) {
 					Tile t = map[x][y];
 					if(t.getType().hasCollision() && Intersector.overlapConvexPolygons(player.getPoly(), t.getHitbox())) {
-						System.out.println("AA");
 						player.setX(oldX);
 						player.setY(oldY);
 						player.getPoly().setRotation(oldRot);
@@ -173,5 +202,9 @@ public class PirateGame extends ApplicationAdapter {
 		batch.dispose();
 		font.dispose();
 		shapeRenderer.dispose();
+		playerTex.dispose();
+		for(TileType t : TileType.values()) {
+			t.dispose();
+		}
 	}
 }
