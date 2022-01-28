@@ -2,12 +2,12 @@ package team11.pirategame;
 
 public class Cannonball {
 	private double x, y;
-	private int damage;
+	private double damage;
 	private double speed;
 	private double direction;
 	private Long creationTime;
 	
-	public Cannonball(double x, double y, int damage, double speed, double direction) {
+	public Cannonball(double x, double y, double damage, double speed, double direction) {
 		this.x = x;
 		this.y = y;
 		this.damage = damage;
@@ -19,6 +19,7 @@ public class Cannonball {
 	public double getX() {
 		return x;
 	}
+	
 	public void setX(double x) {
 		this.x = x;
 	}
@@ -31,11 +32,11 @@ public class Cannonball {
 		this.y = y;
 	}
 	
-	public int getDamage() {
+	public double getDamage() {
 		return damage;
 	}
 	
-	public void setDamage(int damage) {
+	public void setDamage(double damage) {
 		this.damage = damage;
 	}
 	

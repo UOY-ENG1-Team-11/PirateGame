@@ -9,8 +9,8 @@ public class Ship {
 	private Sprite sprite;
 	
 	private double x, y;
-	private int health, maxHealth;
-	private int damage;
+	private double health, maxHealth;
+	private double damage;
 	private Polygon poly;
 	private double speed, accel, decel, brakeDecel;
 	private double speedCap, reverseSpeedCap;
@@ -19,7 +19,7 @@ public class Ship {
 	private double fireRate;
 	private double lastShot = 0;
 	
-	public Ship(Texture tex, double x, double y, int maxHealth, int damage, double accel, double decel,
+	public Ship(Texture tex, double x, double y, double maxHealth, double damage, double accel, double decel,
 			double brakeDecel, double speedCap, double reverseSpeedCap, double turnSpeed, double cannonBallSpeed, double fireRate) {
 		this.x = x;
 		this.y = y;
@@ -76,22 +76,22 @@ public class Ship {
 		sprite.setPosition(Math.round(x), Math.round(y));
 	}
 	
-	public int getHealth() {
+	public double getHealth() {
 		return health;
 	}
 	
-	public void setHealth(int health) {
-		this.health = health;
+	public void setHealth(double d) {
+		this.health = d;
 	}
-	public int getMaxHealth() {
+	public double getMaxHealth() {
 		return maxHealth;
 	}
 	
-	public void setMaxHealth(int maxHealth) {
+	public void setMaxHealth(double maxHealth) {
 		this.maxHealth = maxHealth;
 	}
 	
-	public int getDamage() {
+	public double getDamage() {
 		return damage;
 	}
 	

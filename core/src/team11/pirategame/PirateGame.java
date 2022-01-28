@@ -14,12 +14,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class PirateGame extends ApplicationAdapter {
 	
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
+	private SpriteBatch hudBatch;
 	private BitmapFont font;
 	private ShapeRenderer shapeRenderer;
 	//if these values are changed, change in desktop launcher too
@@ -30,6 +32,8 @@ public class PirateGame extends ApplicationAdapter {
 	
 	private Tile[][] map;
 	private int mapWidth = 60, mapHeight = 34; //Default values overwritten when loading map file.
+	
+	private int gold = 0, points = 0;
 	
 	private Ship player;
 	//these values are in pixels/second and are to be used as default values when making a ship.
@@ -49,6 +53,7 @@ public class PirateGame extends ApplicationAdapter {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
+		hudBatch = new SpriteBatch();
 		camera = new OrthographicCamera();
 		font = new BitmapFont();
 		shapeRenderer = new ShapeRenderer();
@@ -57,6 +62,7 @@ public class PirateGame extends ApplicationAdapter {
 		playerTex = new Texture(Gdx.files.internal("playership1.png"));
 		player = new Ship(playerTex, screenWidth/2 - 64/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed, 500, 0.5);
 		initMap();
+		loadColleges();
 	}
 
 	@Override
@@ -66,15 +72,23 @@ public class PirateGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(camera.combined);
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		batch.begin();
-		font.draw(batch, "SPEED: " + player.getSpeed(), 20, 20);
 		drawMap();
+		font.draw(batch, "SPEED: " + player.getSpeed(), 20, 20);
 		player.getSprite().draw(batch);
         batch.end();
 		shapeRenderer.begin(ShapeType.Filled);
 		drawCannonballs();
+		shapeRenderer.setColor(Color.GREEN);
+		float percentHealthPixels =  (float) (64 * (player.getHealth() / player.getMaxHealth()));
+        shapeRenderer.rect((float) player.getX(), (float) player.getY() - 15, percentHealthPixels, 8);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect((float) player.getX() + percentHealthPixels, (float) player.getY() - 15, 64 - percentHealthPixels, 8);
 		shapeRenderer.setColor(Color.BROWN);
         shapeRenderer.polygon(player.getPoly().getTransformedVertices());
 		shapeRenderer.end();
+		hudBatch.begin();
+		font.draw(hudBatch, "Gold: " + gold + " \nPoints: " + points, 1850, 1050);
+		hudBatch.end();
         playerMovement();
         if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
         	Cannonball[] balls = player.fire();
@@ -110,6 +124,10 @@ public class PirateGame extends ApplicationAdapter {
 				map[x][y] = new Tile(x, y, t);
 			}
 		}*/
+	}
+	
+	private void loadColleges() {
+		Json json = new Json();
 	}
 	
 	private void drawMap() {
@@ -200,6 +218,7 @@ public class PirateGame extends ApplicationAdapter {
 	@Override
 	public void dispose () {
 		batch.dispose();
+		hudBatch.dispose();
 		font.dispose();
 		shapeRenderer.dispose();
 		playerTex.dispose();
