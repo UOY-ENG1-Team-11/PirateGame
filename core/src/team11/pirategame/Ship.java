@@ -1,12 +1,18 @@
 package team11.pirategame;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Polygon;
 
 public class Ship {
 	
-	private Sprite sprite;
+	private TextureRegion[] animFrames;
+	private int animIndex;
+	private float lastFrameChange;
 	
 	private double x, y;
 	private double health, maxHealth;
@@ -19,19 +25,20 @@ public class Ship {
 	private double fireRate;
 	private double lastShot = 0;
 	
-	public Ship(Texture tex, double x, double y, double maxHealth, double damage, double accel, double decel,
+	public Ship(Texture[] textures, double x, double y, double maxHealth, double damage, double accel, double decel,
 			double brakeDecel, double speedCap, double reverseSpeedCap, double turnSpeed, double cannonBallSpeed, double fireRate) {
 		this.x = x;
 		this.y = y;
 		health = maxHealth;
 		this.maxHealth = maxHealth;
 		this.damage = damage;
-		poly = new Polygon(new float[]{0,0,64,0,64,128,0,128});
-		poly.setOrigin(64/2, 128/2);
+		poly = new Polygon(new float[]{5,0,91,0,91,95,48,128,5,95});
+		poly.setOrigin(96/2, 128/2);
 		poly.setPosition((float) x, (float) y);
-		sprite = new Sprite(tex);
-		sprite.setOrigin(64/2, 128/2);
-		sprite.setPosition((float) x, (float) y);
+		animFrames = new TextureRegion[textures.length];
+		for(int i = 0; i < textures.length; i++) {
+			animFrames[i] = new TextureRegion(textures[i]);
+		}
 		speed = 0;
 		this.accel = accel;
 		this.decel = decel;
@@ -46,11 +53,33 @@ public class Ship {
 	public Cannonball[] fire() {
 		if(System.currentTimeMillis() > lastShot + (1/fireRate)*1000) {
 			lastShot = System.currentTimeMillis();
-			Cannonball cLeft = new Cannonball(x+32, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 90 - Math.toDegrees(Math.atan(speed/500)));
-			Cannonball cRight = new Cannonball(x+32, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 270 + Math.toDegrees(Math.atan(speed/500)));
+			Cannonball cLeft = new Cannonball(x+48, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 90 - Math.toDegrees(Math.atan(speed/500)));
+			Cannonball cRight = new Cannonball(x+48, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 270 + Math.toDegrees(Math.atan(speed/500)));
 			Cannonball[] balls = {cLeft, cRight};
 			return balls;
 		} else return null;
+	}
+	
+	public TextureRegion getTextureRegion() {
+		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
+			lastFrameChange ++;
+			if(lastFrameChange > 50) {
+				lastFrameChange = 0;
+				animIndex++;
+			}
+		} else if(Gdx.input.isKeyPressed(Input.Keys.S)) {
+			lastFrameChange++;
+			if(lastFrameChange > 50) {
+				lastFrameChange = 0;
+				animIndex--;
+			}
+		}
+		if(animIndex >= animFrames.length) {
+			animIndex = 0;
+		} else if(animIndex < 0) {
+			animIndex = animFrames.length - 1;
+		}
+		return animFrames[animIndex];
 	}
 
 	public double getX() {
@@ -73,7 +102,6 @@ public class Ship {
 		this.x = x;
 		this.y = y;
 		poly.setPosition(Math.round(x), Math.round(y));
-		sprite.setPosition(Math.round(x), Math.round(y));
 	}
 	
 	public double getHealth() {
@@ -101,10 +129,6 @@ public class Ship {
 	
 	public Polygon getPoly() {
 		return poly;
-	}
-	
-	public Sprite getSprite() {
-		return sprite;
 	}
 	
 	public float getRotation() {
@@ -169,7 +193,6 @@ public class Ship {
 	
 	public void rotate(float rotation) {
 		poly.rotate(rotation);
-		sprite.rotate(rotation);
 	}
 	
 	public double getCannonBallSpeed() {

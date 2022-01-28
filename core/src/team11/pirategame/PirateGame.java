@@ -14,7 +14,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class PirateGame extends ApplicationAdapter {
@@ -46,8 +45,9 @@ public class PirateGame extends ApplicationAdapter {
 	
 	private Long cannonBallTimeout = 10000l; //time in milliseconds for cannonballs to dissapear
 	
-	private Texture playerTex;
+	private Texture[] playerTextures;
 	
+	private College[] colleges;
 	private ArrayList<Cannonball> cannonballs = new ArrayList<Cannonball>();
 	
 	@Override
@@ -59,8 +59,8 @@ public class PirateGame extends ApplicationAdapter {
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
 		camera.setToOrtho(false, screenWidth, screenHeight);
-		playerTex = new Texture(Gdx.files.internal("playership1.png"));
-		player = new Ship(playerTex, screenWidth/2 - 64/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed, 500, 0.5);
+		playerTextures = new Texture[]{new Texture(Gdx.files.internal("playership1.png")), new Texture(Gdx.files.internal("playership2.png")), new Texture("playership3.png")};
+		player = new Ship(playerTextures, screenWidth/2 - 96/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed, 500, 0.5);
 		initMap();
 		loadColleges();
 	}
@@ -74,20 +74,20 @@ public class PirateGame extends ApplicationAdapter {
 		batch.begin();
 		drawMap();
 		font.draw(batch, "SPEED: " + player.getSpeed(), 20, 20);
-		player.getSprite().draw(batch);
+		batch.draw(player.getTextureRegion(),(float) player.getX(),(float) player.getY(), 96/2, 128/2, 96, 128, 1, 1, player.getRotation());
         batch.end();
 		shapeRenderer.begin(ShapeType.Filled);
 		drawCannonballs();
 		shapeRenderer.setColor(Color.GREEN);
-		float percentHealthPixels =  (float) (64 * (player.getHealth() / player.getMaxHealth()));
+		float percentHealthPixels =  (float) (96 * (player.getHealth() / player.getMaxHealth()));
         shapeRenderer.rect((float) player.getX(), (float) player.getY() - 15, percentHealthPixels, 8);
         shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect((float) player.getX() + percentHealthPixels, (float) player.getY() - 15, 64 - percentHealthPixels, 8);
+        shapeRenderer.rect((float) player.getX() + percentHealthPixels, (float) player.getY() - 15, 96 - percentHealthPixels, 8);
 		shapeRenderer.setColor(Color.BROWN);
         shapeRenderer.polygon(player.getPoly().getTransformedVertices());
 		shapeRenderer.end();
 		hudBatch.begin();
-		font.draw(hudBatch, "Gold: " + gold + " \nPoints: " + points, 1850, 1050);
+		//font.draw(hudBatch, "Gold: " + gold + " \nPoints: " + points, 1850, 1050);
 		hudBatch.end();
         playerMovement();
         if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
@@ -127,7 +127,8 @@ public class PirateGame extends ApplicationAdapter {
 	}
 	
 	private void loadColleges() {
-		Json json = new Json();
+		colleges = new College[5];
+		//colleges[0] = new College();
 	}
 	
 	private void drawMap() {
@@ -188,7 +189,7 @@ public class PirateGame extends ApplicationAdapter {
 			if(Gdx.input.isKeyPressed(Input.Keys.D)) player.rotate((float)(-player.getTurnSpeed() * Math.abs(player.getSpeed()/player.getSpeedCap()) * Gdx.graphics.getDeltaTime()));
 			float[] vertices = player.getPoly().getTransformedVertices();
 			int minX = mapWidth + 1, minY = mapHeight + 1, maxX = -1, maxY = -1;
-			for(int i = 0; i < 7; i +=2) {
+			for(int i = 0; i < vertices.length - 1; i +=2) {
 				int x = (int) Math.floor(vertices[i]/32);
 				int y = (int) Math.floor(vertices[i+1]/32);
 				if(x < minX) minX = x;
@@ -221,7 +222,9 @@ public class PirateGame extends ApplicationAdapter {
 		hudBatch.dispose();
 		font.dispose();
 		shapeRenderer.dispose();
-		playerTex.dispose();
+		for(Texture t : playerTextures) {
+			t.dispose();
+		}
 		for(TileType t : TileType.values()) {
 			t.dispose();
 		}
