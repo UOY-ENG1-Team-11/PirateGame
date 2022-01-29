@@ -46,6 +46,7 @@ public class PirateGame extends ApplicationAdapter {
 	private Long cannonBallTimeout = 10000l; //time in milliseconds for cannonballs to dissapear
 	
 	private Texture[] playerTextures;
+	private Texture[] collegeTextures;
 	
 	private College[] colleges;
 	private ArrayList<Cannonball> cannonballs = new ArrayList<Cannonball>();
@@ -59,14 +60,23 @@ public class PirateGame extends ApplicationAdapter {
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
 		camera.setToOrtho(false, screenWidth, screenHeight);
-		playerTextures = new Texture[]{new Texture(Gdx.files.internal("playership1.png")), new Texture(Gdx.files.internal("playership2.png")), new Texture("playership3.png")};
-		player = new Ship(playerTextures, screenWidth/2 - 96/2, screenHeight/2 - 128/2, 100, 1, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed, 500, 0.5);
+		playerTextures = new Texture[]{new Texture(Gdx.files.internal("ships/playership1.png")),
+				new Texture(Gdx.files.internal("ships/playership2.png")),
+				new Texture("ships/playership3.png")};
+		collegeTextures = new Texture[] {new Texture(Gdx.files.internal("colleges/CollegeRubble.png")), 
+				new Texture(Gdx.files.internal("colleges/HomeCollege.png")), 
+				new Texture(Gdx.files.internal("colleges/Lvl1College.png")),
+				new Texture(Gdx.files.internal("colleges/Lvl2College.png")),
+				new Texture(Gdx.files.internal("colleges/Lvl3College.png")),
+				new Texture(Gdx.files.internal("colleges/Lvl4College.png"))};
+		player = new Ship(playerTextures, 27.5*32, 6*32, 100, 50, shipAccel, shipNaturalDecel, shipBrakeDecel, shipSpeedCap, shipMinusSpeedCap, shipRotSpeed, 500, 1);
+		loadColleges();
 		initMap();
 		loadColleges();
 	}
 
 	@Override
-	public void render () {
+	public void render () { 
 		ScreenUtils.clear(0.0157f, 0.6118f, 0.0157f, 1);
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
@@ -83,11 +93,20 @@ public class PirateGame extends ApplicationAdapter {
         shapeRenderer.rect((float) player.getX(), (float) player.getY() - 15, percentHealthPixels, 8);
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect((float) player.getX() + percentHealthPixels, (float) player.getY() - 15, 96 - percentHealthPixels, 8);
-		shapeRenderer.setColor(Color.BROWN);
-        shapeRenderer.polygon(player.getPoly().getTransformedVertices());
+        for(College c : colleges) {
+        	if(!c.isDefeated()) {
+	        	shapeRenderer.setColor(Color.GREEN);
+	    		percentHealthPixels =  (float) (128 * (c.getHealth() / c.getMaxHealth()));
+	            shapeRenderer.rect((float) c.getX() * 32, (float) (c.getY() * 32) - 15, percentHealthPixels, 8);
+	            shapeRenderer.setColor(Color.RED);
+	            shapeRenderer.rect((float) (c.getX() * 32) + percentHealthPixels, (float) (c.getY() * 32) - 15, 128 - percentHealthPixels, 8);
+        	}
+        }
+		//shapeRenderer.setColor(Color.BROWN);
+        //shapeRenderer.polygon(player.getPoly().getTransformedVertices());
 		shapeRenderer.end();
 		hudBatch.begin();
-		//font.draw(hudBatch, "Gold: " + gold + " \nPoints: " + points, 1850, 1050);
+		font.draw(hudBatch, "Gold: " + gold + " \nPoints: " + points, 1850, 1050);
 		hudBatch.end();
         playerMovement();
         if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
@@ -128,7 +147,11 @@ public class PirateGame extends ApplicationAdapter {
 	
 	private void loadColleges() {
 		colleges = new College[5];
-		//colleges[0] = new College();
+		colleges[0] = new College(collegeTextures[1], collegeTextures[0], 27, 1, 500, 50, 0, 0.5, 160, 180, true);
+		colleges[1] = new College(collegeTextures[2], collegeTextures[0], 49, 39, 500, 50, 0, 0.5, 160, 0, false);
+		colleges[2] = new College(collegeTextures[3], collegeTextures[0], 88, 15, 500, 50, 0, 0.5, 160, 180, true);
+		colleges[3] = new College(collegeTextures[4], collegeTextures[0], 88, 92, 500, 50, 0, 0.5, 160, 0, false);
+		colleges[4] = new College(collegeTextures[5], collegeTextures[0], 21, 64, 500, 50, 0, 0.5, 160, 180, false);
 	}
 	
 	private void drawMap() {
@@ -138,6 +161,9 @@ public class PirateGame extends ApplicationAdapter {
 				
 			}
 		}
+		for(College c : colleges) {
+			batch.draw(c.getImg(), (float) c.getX()*32, (float) c.getY()*32, 128/2, 128/2, 128, 128, 1, 1, c.getRotation());
+		}
 	}
 	
 	private void drawCannonballs() {
@@ -146,6 +172,20 @@ public class PirateGame extends ApplicationAdapter {
         for(Cannonball c : cannonballs) {
         	c.setX(c.getX() + c.getSpeed() * Math.sin(Math.toRadians(-c.getDirection())) * Gdx.graphics.getDeltaTime());
 			c.setY(c.getY() + c.getSpeed() * Math.cos(Math.toRadians(-c.getDirection())) * Gdx.graphics.getDeltaTime());
+			Tile t = map[(int) Math.floor(c.getX()/32)][(int) Math.floor(c.getY()/32)];
+			if(t.getType().hasCollision()) {
+				toRemove.add(c);
+			}
+			for(College col : colleges) {
+				if(!col.isDefeated() && col.getHitbox().contains((float) c.getX(), (float) c.getY())) {
+					col.damage(c.getDamage());
+					if(col.getHealth() <= 0) {
+						addPoints(100);
+						addGold(50);
+					}
+					toRemove.add(c);
+				}
+			}
         	shapeRenderer.circle((float) c.getX(), (float) c.getY(), 10);      	
         	if(System.currentTimeMillis() > c.getCreationTime() + cannonBallTimeout) {
         		toRemove.add(c);
@@ -216,6 +256,22 @@ public class PirateGame extends ApplicationAdapter {
 		camera.update();
 	}
 	
+	private void setPoints(int points) {
+		this.points = points;
+	}
+	
+	private void addPoints(int points) {
+		setPoints(this.points += points);
+	}
+	
+	private void setGold(int gold) {
+		this.gold = gold;
+	}
+	
+	private void addGold(int gold) {
+		setGold(this.gold += gold);
+	}
+	
 	@Override
 	public void dispose () {
 		batch.dispose();
@@ -223,6 +279,9 @@ public class PirateGame extends ApplicationAdapter {
 		font.dispose();
 		shapeRenderer.dispose();
 		for(Texture t : playerTextures) {
+			t.dispose();
+		}
+		for(Texture t : collegeTextures) {
 			t.dispose();
 		}
 		for(TileType t : TileType.values()) {

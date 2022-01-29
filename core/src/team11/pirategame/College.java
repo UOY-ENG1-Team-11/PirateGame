@@ -1,50 +1,60 @@
 package team11.pirategame;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.Texture; 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Polygon;
 
 public class College {
 	
-	private Sprite sprite;
+	private TextureRegion img, imgDead;
 	private double x, y;
+	private Polygon hitbox;
 	private double damage;
+	private int cannonNo;
 	private double health, maxHealth;
 	private double fireRate;
 	private double range;
+	private float rotation;
 	private boolean playerAlly;
+	private boolean defeated;
 	
-	public College(Texture tex, double x, double y, double damage, double maxHealth, double fireRate, double range, boolean playerAlly) {
+	public College(Texture tex, Texture deadTex, double x, double y, double maxHealth, double damage, int cannonNo, double fireRate, double range, float rotation, boolean playerAlly) {
 		this.x = x;
 		this.y = y;
+		hitbox = new Polygon(new float[] {0, 0, 128, 0, 128, 128, 0, 128});
+		hitbox.setPosition((float) x*32, (float) y*32);
 		health = maxHealth;
 		this.maxHealth = maxHealth;
 		this.damage = damage;
-		sprite = new Sprite(tex);
-		sprite.setOrigin(32/2, 32/2);
-		sprite.setPosition((float) x*32, (float) y*32);
+		this.setCannonNo(cannonNo);
+		img = new TextureRegion(tex);
+		imgDead = new TextureRegion(deadTex);
 		this.fireRate = fireRate;
 		this.setRange(range);
+		this.rotation = rotation;
 		this.playerAlly = playerAlly;
+		setDefeated(false);
 	}
 
-	public Sprite getSprite() {
-		return sprite;
+	public TextureRegion getImg() {
+		if(!defeated) return img;
+		return imgDead;
+	}
+	
+	public void setImg(Texture tex) {
+		img = new TextureRegion(tex);
 	}
 
 	public double getX() {
 		return x;
 	}
 
-	public void setX(double x) {
-		this.x = x;
-	}
-
 	public double getY() {
 		return y;
 	}
 
-	public void setY(double y) {
-		this.y = y;
+	public Polygon getHitbox() {
+		return hitbox;
 	}
 
 	public double getDamage() {
@@ -53,6 +63,14 @@ public class College {
 
 	public void setDamage(double damage) {
 		this.damage = damage;
+	}
+
+	public int getCannonNo() {
+		return cannonNo;
+	}
+
+	public void setCannonNo(int cannonNo) {
+		this.cannonNo = cannonNo;
 	}
 
 	public double getMaxHealth() {
@@ -69,6 +87,14 @@ public class College {
 
 	public void setHealth(double health) {
 		this.health = health;
+		if(health <= 0) {
+			this.health = 0;
+			setDefeated(true);
+		}
+	}
+	
+	public void damage(double damage) {
+		setHealth(health -= damage);
 	}
 
 	public double getFireRate() {
@@ -87,11 +113,27 @@ public class College {
 		this.range = range;
 	}
 
+	public float getRotation() {
+		return rotation;
+	}
+
+	public void setRotation(float rotation) {
+		this.rotation = rotation;
+	}
+
 	public boolean isPlayerAlly() {
 		return playerAlly;
 	}
 
 	public void setPlayerAlly(boolean playerAlly) {
 		this.playerAlly = playerAlly;
+	}
+
+	public boolean isDefeated() {
+		return defeated;
+	}
+
+	public void setDefeated(boolean defeated) {
+		this.defeated = defeated;
 	}
 }
