@@ -1,21 +1,32 @@
 package team11.pirategame;
 
 public class Cannonball {
+	
+	private int collegeId;
 	private double x, y;
 	private double damage;
 	private double speed;
 	private double direction;
-	private Long creationTime;
+	private float creationTime;
 	
-	public Cannonball(double x, double y, double damage, double speed, double direction) {
+	public Cannonball(int collegeId, double x, double y, double damage, double speed, double direction, float gameTime) {
+		this.collegeId = collegeId;
 		this.x = x;
 		this.y = y;
 		this.damage = damage;
 		this.speed = speed;
 		this.direction = direction;
-		creationTime = System.currentTimeMillis();
+		creationTime = gameTime;
 	}
 	
+	public int getCollegeId() {
+		return collegeId;
+	}
+
+	public void setCollegeId(int collegeId) {
+		this.collegeId = collegeId;
+	}
+
 	public double getX() {
 		return x;
 	}
@@ -56,7 +67,7 @@ public class Cannonball {
 		this.direction = direction;
 	}
 	
-	public Long getCreationTime() {
+	public float getCreationTime() {
 		return creationTime;
 	}
 }

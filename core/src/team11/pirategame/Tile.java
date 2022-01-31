@@ -13,8 +13,7 @@ public class Tile {
 		this.x = x;
 		this.y = y;
 		this.type = type;
-		hitbox = new Polygon(new float[]{0,0,32,0,32,32,0,32});
-		hitbox.setOrigin(0, 0);
+		hitbox = new Polygon(type.getHitbox());
 		hitbox.setPosition((float) x*32, (float) y*32);
 		sprite = new Sprite(type.getTexture());
 		sprite.setPosition(x*32, y*32);

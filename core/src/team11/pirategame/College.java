@@ -6,19 +6,22 @@ import com.badlogic.gdx.math.Polygon;
 
 public class College {
 	
+	private int id;
 	private TextureRegion img, imgDead;
 	private double x, y;
 	private Polygon hitbox;
 	private double damage;
-	private int cannonNo;
+	private double cannonLocs[];
 	private double health, maxHealth;
-	private double fireRate;
+	private double fireRate, cannonBallSpeed;
+	private double lastShot = 0;
 	private double range;
 	private float rotation;
 	private boolean playerAlly;
 	private boolean defeated;
 	
-	public College(Texture tex, Texture deadTex, double x, double y, double maxHealth, double damage, int cannonNo, double fireRate, double range, float rotation, boolean playerAlly) {
+	public College(int id, Texture tex, Texture deadTex, double x, double y, double maxHealth, double damage, double cannonLocs[], double fireRate, double cannonBallSpeed, double range, float rotation, boolean playerAlly) {
+		this.id = id;
 		this.x = x;
 		this.y = y;
 		hitbox = new Polygon(new float[] {0, 0, 128, 0, 128, 128, 0, 128});
@@ -26,14 +29,36 @@ public class College {
 		health = maxHealth;
 		this.maxHealth = maxHealth;
 		this.damage = damage;
-		this.setCannonNo(cannonNo);
+		this.setCannonLocs(cannonLocs);
 		img = new TextureRegion(tex);
 		imgDead = new TextureRegion(deadTex);
 		this.fireRate = fireRate;
+		this.cannonBallSpeed = cannonBallSpeed;
 		this.setRange(range);
 		this.rotation = rotation;
 		this.playerAlly = playerAlly;
 		setDefeated(false);
+	}
+	
+	public Cannonball[] fire(double X, double Y, float gameTime) {
+		if(!defeated) {
+			if(gameTime > lastShot + (1/fireRate)) {
+				lastShot = gameTime;
+				Cannonball[] balls = new Cannonball[cannonLocs.length/2];
+				for(int i = 0; i < cannonLocs.length; i+=2) {
+					double theta = Math.toDegrees(Math.acos((Y-(y*32 + cannonLocs[i + 1]))/(Math.sqrt(Math.pow(X - (x*32 + cannonLocs[i]), 2) + Math.pow(Y - (y * 32 + cannonLocs[i+1]), 2)))));
+					if(X > (x*32 + cannonLocs[i])) {
+						theta = -theta;
+					}
+					balls[i/2] = new Cannonball(id, x*32 + cannonLocs[i], y*32 + cannonLocs[i + 1], damage, cannonBallSpeed, theta, gameTime);
+				}
+				return balls;
+			} else return null;
+		} else return null;
+	}
+	
+	public int getId() {
+		return id;
 	}
 
 	public TextureRegion getImg() {
@@ -65,12 +90,12 @@ public class College {
 		this.damage = damage;
 	}
 
-	public int getCannonNo() {
-		return cannonNo;
+	public double[] getCannonLocs() {
+		return cannonLocs;
 	}
 
-	public void setCannonNo(int cannonNo) {
-		this.cannonNo = cannonNo;
+	public void setCannonLocs(double cannonLocs[]) {
+		this.cannonLocs = cannonLocs;
 	}
 
 	public double getMaxHealth() {

@@ -12,6 +12,7 @@ public class DesktopLauncher {
 		//if these values are changed, change in main class too
 		config.width = 1920;
 		config.height = 1080;
+		config.fullscreen = true;
 		config.addIcon("icon.png", Files.FileType.Internal);
 		new LwjglApplication(new PirateGame(), config);
 	}

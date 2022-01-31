@@ -14,10 +14,11 @@ public class Ship {
 	private int animIndex;
 	private float lastFrameChange;
 	
+	private int collegeId;
 	private double x, y;
 	private double health, maxHealth;
 	private double damage;
-	private Polygon poly;
+	private Polygon hitbox;
 	private double speed, accel, decel, brakeDecel;
 	private double speedCap, reverseSpeedCap;
 	private double turnSpeed;
@@ -25,16 +26,16 @@ public class Ship {
 	private double fireRate;
 	private double lastShot = 0;
 	
-	public Ship(Texture[] textures, double x, double y, double maxHealth, double damage, double accel, double decel,
+	public Ship(int collegeId, Texture[] textures, double x, double y, double maxHealth, double damage, double accel, double decel,
 			double brakeDecel, double speedCap, double reverseSpeedCap, double turnSpeed, double cannonBallSpeed, double fireRate) {
 		this.x = x;
 		this.y = y;
 		health = maxHealth;
 		this.maxHealth = maxHealth;
 		this.damage = damage;
-		poly = new Polygon(new float[]{5,0,91,0,91,95,48,128,5,95});
-		poly.setOrigin(96/2, 128/2);
-		poly.setPosition((float) x, (float) y);
+		hitbox = new Polygon(new float[]{5,0,91,0,91,95,48,128,5,95});
+		hitbox.setOrigin(96/2, 128/2);
+		hitbox.setPosition((float) x, (float) y);
 		animFrames = new TextureRegion[textures.length];
 		for(int i = 0; i < textures.length; i++) {
 			animFrames[i] = new TextureRegion(textures[i]);
@@ -50,16 +51,24 @@ public class Ship {
 		this.fireRate = fireRate;
 	}
 	
-	public Cannonball[] fire() {
-		if(System.currentTimeMillis() > lastShot + (1/fireRate)*1000) {
-			lastShot = System.currentTimeMillis();
-			Cannonball cLeft = new Cannonball(x+48, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 90 - Math.toDegrees(Math.atan(speed/500)));
-			Cannonball cRight = new Cannonball(x+48, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 270 + Math.toDegrees(Math.atan(speed/500)));
+	public Cannonball[] fire(float gameTime) {
+		if(gameTime > lastShot + (1/fireRate)) {
+			lastShot = gameTime;
+			Cannonball cLeft = new Cannonball(collegeId, x+48, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 90 - Math.toDegrees(Math.atan(speed/500)), gameTime);
+			Cannonball cRight = new Cannonball(collegeId, x+48, y+64, damage, Math.sqrt(Math.pow(cannonBallSpeed, 2) + Math.pow(speed, 2)), getRotation() + 270 + Math.toDegrees(Math.atan(speed/500)), gameTime);
 			Cannonball[] balls = {cLeft, cRight};
 			return balls;
 		} else return null;
 	}
 	
+	public int getCollegeId() {
+		return collegeId;
+	}
+
+	public void setCollegeId(int collegeId) {
+		this.collegeId = collegeId;
+	}
+
 	public TextureRegion getTextureRegion() {
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
 			lastFrameChange ++;
@@ -85,6 +94,10 @@ public class Ship {
 	public double getX() {
 		return x;
 	}
+	
+	public double getCenterX() {
+		return x + 48;
+	}
 
 	public void setX(double x) {
 		setPosition(x,y);
@@ -92,6 +105,10 @@ public class Ship {
 	
 	public double getY() {
 		return y;
+	}
+	
+	public double getCenterY() {
+		return y + 64;
 	}
 
 	public void setY(double y) {
@@ -101,15 +118,18 @@ public class Ship {
 	public void setPosition(double x, double y) {
 		this.x = x;
 		this.y = y;
-		poly.setPosition(Math.round(x), Math.round(y));
+		hitbox.setPosition(Math.round(x), Math.round(y));
 	}
 	
 	public double getHealth() {
 		return health;
 	}
 	
-	public void setHealth(double d) {
-		this.health = d;
+	public void setHealth(double health) {
+		this.health = health;
+		if(health <= 0) {
+			this.health = 0;
+		}
 	}
 	public double getMaxHealth() {
 		return maxHealth;
@@ -123,16 +143,20 @@ public class Ship {
 		return damage;
 	}
 	
-	public void setDamage(int damage) {
+	public void setDamage(double damage) {
 		this.damage = damage;
 	}
 	
-	public Polygon getPoly() {
-		return poly;
+	public void damage(double damage) {
+		setHealth(health -= damage);
+	}
+	
+	public Polygon getHitbox() {
+		return hitbox;
 	}
 	
 	public float getRotation() {
-		return poly.getRotation();
+		return hitbox.getRotation();
 	}
 
 	public double getSpeed() {
@@ -192,7 +216,7 @@ public class Ship {
 	}
 	
 	public void rotate(float rotation) {
-		poly.rotate(rotation);
+		hitbox.rotate(rotation);
 	}
 	
 	public double getCannonBallSpeed() {
