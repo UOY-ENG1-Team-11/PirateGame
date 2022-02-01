@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 
 public enum TileType {
 	Ocean("0", "Ocean", "water.png", false),
+	Plunder("P", "Plunder", "treasurewater.png", false),
 	Land("L", "Land", "land.png", true),
 	Land_Left("]", "Left Land", "left land.png", true, new float[]{0,0,16,0,16,32,0,32}),
 	Land_Right("[", "Right Land", "right land.png", true, new float[]{16,0,32,0,32,32,16,32}),
@@ -19,6 +20,13 @@ public enum TileType {
 	Land_Top_Left_Outer("7", "Top Left Outer Corner", "outer top left corner.png", true, new float[]{16,0,32,0,32,16,16,16}),
 	Land_Top_Right_Outer("8", "Top Right Outer Corner", "outer top right corner.png", true, new float[]{0,0,16,0,16,16,0,16});
 	
+	/**
+	 * Constructor for TileType with no unique hitbox for collision. Default hitbox takes up the entire tile.
+	 * @param id		the unique string used to represent this tile in the map file
+	 * @param name		plain english name for the tile
+	 * @param fileName	the name of the tile's image file located in /assets/tiles/
+	 * @param collision whether the tile should have collision
+	 * */
 	TileType(String id, String name, String fileName, boolean collision) {
 		this.id = id;
 		this.name = name;
@@ -27,6 +35,14 @@ public enum TileType {
 		hitbox = new float[]{0,0,32,0,32,32,0,32};
 	}
 	
+	/**
+	 * Constructor for TileType with a hitbox that doesn't take up the entire tile.
+	 * @param id		the unique string used to represent this tile in the map file
+	 * @param name		plain english name for the tile
+	 * @param fileName	the name of the tile's image file located in /assets/tiles/
+	 * @param collision whether the tile should have collision
+	 * @param hitbox	an array where the elements are coordinates on the tile to draw a polygon representing the hitbox ie {x,y,x2,y2,...}
+	 * */
 	TileType(String id, String name, String fileName, boolean collision, float[] hitbox) {
 		this.id = id;
 		this.name = name;
@@ -61,6 +77,11 @@ public enum TileType {
 		return hitbox;
 	}
 	
+	/**
+	 * Returns a TileType based off the id string
+	 * @param id the string identifier of the tile
+	 * @return the TileType with this id or null if none exist
+	 * */
 	public static TileType getTileType(String id) {
 		for(TileType t : TileType.values()) {
 			if(t.getId().equals(id)) {
@@ -70,6 +91,9 @@ public enum TileType {
 		return null;
 	}
 	
+	/**
+	 * Disposes of the texture loaded for this tile when the game is closing
+	 * */
 	public void dispose() {
 		texture.dispose();
 	}

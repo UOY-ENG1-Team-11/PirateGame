@@ -9,6 +9,16 @@ public class Cannonball {
 	private double direction;
 	private float creationTime;
 	
+	/**
+	 * Constructor for Cannonball
+	 * @param collegeId the id of the college / college of the ship that fired this cannonball
+	 * @param x			x-coordinate of the cannonball on spawn
+	 * @param y			y-coordinate of the cannonball on spawn
+	 * @param damage	how much damage the cannonball will deal on hitting a college/ship
+	 * @param speed		the speed the cannonball should move at in pixels/second
+	 * @param direction	the angle in degrees from north (0,1) the cannonball should move in
+	 * @param gameTime	the game time when the cannonball was fired
+	 * */
 	public Cannonball(int collegeId, double x, double y, double damage, double speed, double direction, float gameTime) {
 		this.collegeId = collegeId;
 		this.x = x;
@@ -19,6 +29,10 @@ public class Cannonball {
 		creationTime = gameTime;
 	}
 	
+	/**
+	 * Returns the id of the college / college of the ship that fired this cannonball
+	 * @return the id of the college / college of the ship that fired this cannonball
+	 * */
 	public int getCollegeId() {
 		return collegeId;
 	}
@@ -67,6 +81,10 @@ public class Cannonball {
 		this.direction = direction;
 	}
 	
+	/**
+	 * Returns the gameTime when the cannonball was created
+	 * @return the value of gameTime from when the cannonball was created
+	 * */
 	public float getCreationTime() {
 		return creationTime;
 	}

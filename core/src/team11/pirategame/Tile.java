@@ -9,6 +9,12 @@ public class Tile {
 	private Polygon hitbox;
 	private Sprite sprite;
 	
+	/**
+	 * Constructor for Tile
+	 * @param x x-coordinate for the tile in the map structure
+	 * @param y y-coordinate for the tile in the map structure
+	 * @param type the TileType that represents which type of tile this is
+	 * */
 	public Tile(int x, int y, TileType type) {
 		this.x = x;
 		this.y = y;
@@ -24,6 +30,7 @@ public class Tile {
 	}
 	public void setType(TileType type) {
 		this.type = type;
+		sprite.setTexture(type.getTexture());
 	}
 	public int getX() {
 		return x;
